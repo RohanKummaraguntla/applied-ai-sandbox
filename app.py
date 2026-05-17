@@ -12,8 +12,7 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "sandbox-not-a-real-secret"
 
-    # In-memory store for the sandbox. Resets on every restart, which is
-    # fine for practice. Real apps use a database.
+    # In-memory store
     app.notes: list[dict] = []  # type: ignore[attr-defined]
 
     @app.route("/")
@@ -25,12 +24,26 @@ def create_app() -> Flask:
         if request.method == "POST":
             title = (request.form.get("title") or "").strip()
             body = (request.form.get("body") or "").strip()
-            # TASK 01 will add validation here.
+
+            errors = {}
+
+            if not title:
+                errors["title"] = "Title is required"
+            if not body:
+                errors["body"] = "Body is required"
+
+            if errors:
+                return render_template(
+                    "new_note.html",
+                    errors=errors,
+                    title=title,
+                    body=body,
+                )
+
             app.notes.append({"title": title, "body": body})
             return redirect(url_for("home"))
-        return render_template("new_note.html")
 
-    # TASK 02 will add a /notes/<idx>/delete route here.
+        return render_template("new_note.html")
 
     return app
 
